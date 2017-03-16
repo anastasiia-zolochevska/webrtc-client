@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <title>Hello world</title>
+
+  <link rel="stylesheet" href="/css/main.css" />
+
+</head>
+
+<body>
+
+  <h1>Realtime communication with WebRTC</h1>
+
+  <div id="videos">
+    <video id="localVideo" autoplay muted></video>
+    <video id="remoteVideo" autoplay></video>
+  </div>
+
+  <button id="serverButton"> I'm 'server' </button>
+  <button id="connectButton"> Connect </button>
+  <button id="startTestButton"> Start Test </button>
+  
+
+<script src="js/FileBufferReader.js"></script>
+  <script src="/js/lib/socket.io.js"></script>
+  <script src="/js/lib/adapter.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+
+</html>
