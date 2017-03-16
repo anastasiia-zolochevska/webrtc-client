@@ -29,6 +29,7 @@ connectButton.onclick = function(){
 var room = 'foo';
 
 var socket = io.connect("http://3dstreamingserver.azurewebsites.net:8080/");
+// var socket = io.connect("http://127.0.0.1:8080/");
 
 if (room !== '') {
   socket.emit('create or join', room);
@@ -40,6 +41,10 @@ socket.on('join', function (room) {
 
 socket.on('joined', function (room) {
   isChannelReady = true;
+});
+
+socket.on('log', function(array) {
+  console.log.apply(console, array);
 });
 
 function sendMessage(message) {
