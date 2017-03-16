@@ -28,8 +28,7 @@ connectButton.onclick = function(){
 
 var room = 'foo';
 
-var socket = io.connect("http://3dstreamingserver.azurewebsites.net:8080/");
-// var socket = io.connect("http://127.0.0.1:8080/");
+var socket = io.connect("http://3dstreamingsignalingserver.azurewebsites.net:80");
 
 if (room !== '') {
   socket.emit('create or join', room);
