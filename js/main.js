@@ -3,12 +3,13 @@
 var isChannelReady = false;
 var isServer = false;
 var localStream;
-var pc;
+var peerConnection;
 var remoteStream;
 
 var serverButton = document.getElementById('serverButton');
 var startTestButton = document.getElementById('startTestButton');
 var connectButton = document.getElementById('connectButton');
+var getStatsButton = document.getElementById('getStatsButton');
 
 var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
@@ -22,13 +23,22 @@ startTestButton.onclick = function () {
   doCall();
 }
 
-connectButton.onclick = function(){
+connectButton.onclick = function () {
   createPeerConnection();
+}
+
+getStatsButton.onclick = function () {
+  gatherStats();
+}
+
+disconnectButton.onclick = function () {
+  sendMessage('bye');
 }
 
 var room = 'foo';
 
 var socket = io.connect("http://3dstreamingsignalingserver.azurewebsites.net:80");
+// var socket = io.connect("http://127.0.0.1:1234");
 
 if (room !== '') {
   socket.emit('create or join', room);
@@ -42,9 +52,10 @@ socket.on('joined', function (room) {
   isChannelReady = true;
 });
 
-socket.on('log', function(array) {
+socket.on('log', function (array) {
   console.log.apply(console, array);
 });
+
 
 function sendMessage(message) {
   console.log('Client sending message: ', message);
@@ -55,17 +66,17 @@ function sendMessage(message) {
 socket.on('message', function (message) {
   console.log('Client received message:', message);
   if (message.type === 'offer') {
-    pc.setRemoteDescription(new RTCSessionDescription(message));
+    peerConnection.setRemoteDescription(new RTCSessionDescription(message));
     doAnswer();
   } else if (message.type === 'answer') {
-    pc.setRemoteDescription(new RTCSessionDescription(message));
+    peerConnection.setRemoteDescription(new RTCSessionDescription(message));
   } else if (message.type === 'candidate') {
     var candidate = new RTCIceCandidate({
       sdpMLineIndex: message.label,
       candidate: message.candidate
     });
-    pc.addIceCandidate(candidate);
-  } 
+    peerConnection.addIceCandidate(candidate);
+  }
 });
 
 
@@ -83,12 +94,12 @@ window.onbeforeunload = function () {
 
 function createPeerConnection() {
   try {
-    pc = new RTCPeerConnection(null);
-    if(isServer){
-        pc.addStream(localStream);
+    peerConnection = new RTCPeerConnection(null);
+    if (isServer) {
+      peerConnection.addStream(localStream);
     }
-    pc.onicecandidate = handleIceCandidate;
-    pc.onaddstream = handleRemoteStreamAdded;
+    peerConnection.onicecandidate = handleIceCandidate;
+    peerConnection.onaddstream = handleRemoteStreamAdded;
     console.log('Created RTCPeerConnnection');
   } catch (e) {
     console.log('Failed to create PeerConnection, exception: ' + e.message);
@@ -123,19 +134,19 @@ function handleCreateOfferError(event) {
 
 function doCall() {
   console.log('Sending offer to peer');
-  pc.createOffer(setLocalAndSendMessage, handleCreateOfferError);
+  peerConnection.createOffer(setLocalAndSendMessage, handleCreateOfferError);
 }
 
 function doAnswer() {
   console.log('Sending answer to peer.');
-  pc.createAnswer().then(
+  peerConnection.createAnswer().then(
     setLocalAndSendMessage,
     onCreateSessionDescriptionError
   );
 }
 
 function setLocalAndSendMessage(sessionDescription) {
-  pc.setLocalDescription(sessionDescription);
+  peerConnection.setLocalDescription(sessionDescription);
   console.log('setLocalAndSendMessage sending message', sessionDescription);
   sendMessage(sessionDescription);
 }
@@ -151,6 +162,84 @@ function handleRemoteStreamAdded(event) {
   remoteVideo.src = window.URL.createObjectURL(event.stream);
   remoteStream = event.stream;
 }
+
+
+var stats = {};
+stats.rttStats = new StatisticsAggregate();
+
+// function gotStats(response) {
+//   console.log("stats", response);
+
+//   for (var i in response) {
+//     if (response[i].id === 'bweforvideo') {
+//       console.log("googAvailableSendBandwidth", response[i].googAvailableSendBandwidth);
+//     }
+//     if (response[i].type === 'ssrc') {
+//       console.log("googRtt", response[i].googRtt);
+//     }
+//     if (response[i].type === 'inboundrtp') {
+//       console.log("mozRtt", response[i].mozRtt);
+//       console.log("jitter", response[i].jitter);
+//       console.log("packetsLost", response[i].packetsLost);
+//     }
+//     if (response[i].type === 'outboundrtp') {
+//       console.log("bitrateMean", response[i].bitrateMean);
+//       console.log("bitrateStdDev", response[i].bitrateStdDev);
+//       console.log("framerateMean", response[i].framerateMean);
+//     }
+//   }
+
+// }
+
+
+function gotStats(response) {
+  for (var i in response) {
+    if (response[i].type === 'ssrc') {
+      console.log("googRtt", response[i].googRtt);
+    }
+    if (response[i].type === 'inboundrtp') {
+      console.log("packetsLost", response[i].packetsLost);
+    }
+  }
+}
+
+function gatherStats() {
+  var stats = [];
+  var statsCollectTime = [];
+  var statStepMs = 500;
+  var counter = 0;
+
+  var selector = (adapter.browserDetails.browser === 'chrome') ?
+    (localStream || remoteStream).getVideoTracks()[0] : null;
+
+
+  function getStats_() {
+
+    peerConnection.getStats(selector)
+      .then((response) => {
+        console.log("response", response);
+        for (var index in response) {
+          stats.push(response[index]);
+          statsCollectTime.push(Date.now());
+        }
+        if (counter == 5) {
+          gotStats(stats);
+        }
+        else {
+          setTimeout(getStats_, statStepMs)
+        }
+        counter++;
+      })
+      .catch(function (error) {
+        console.log("Error gathering starts", error)
+      });
+  }
+
+  setTimeout(getStats_, statStepMs);
+
+
+}
+
 
 
 function openFile() {
