@@ -14,6 +14,7 @@ var getStatsButton = document.getElementById('getStatsButton');
 var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
+
 serverButton.onclick = function () {
   isServer = true;
   openFile();
@@ -37,8 +38,8 @@ disconnectButton.onclick = function () {
 
 var room = 'foo';
 
-var socket = io.connect("http://3dstreamingsignalingserver.azurewebsites.net:80");
-// var socket = io.connect("http://127.0.0.1:1234");
+// var socket = io.connect("http://3dstreamingsignalingserver.azurewebsites.net:80");
+var socket = io.connect("http://127.0.0.1:1234");
 
 if (room !== '') {
   socket.emit('create or join', room);
@@ -92,9 +93,16 @@ window.onbeforeunload = function () {
 };
 
 
+
+var pcConfig = {
+  'iceServers': [{
+    'url': 'stun:stun.l.google.com:19302'
+  }]
+};
+
 function createPeerConnection() {
   try {
-    peerConnection = new RTCPeerConnection(null);
+    peerConnection = new RTCPeerConnection(pcConfig);
     if (isServer) {
       peerConnection.addStream(localStream);
     }
