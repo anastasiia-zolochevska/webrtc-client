@@ -38,8 +38,8 @@ disconnectButton.onclick = function () {
 
 var room = 'foo';
 
-// var socket = io.connect("http://3dstreamingsignalingserver.azurewebsites.net:80");
-var socket = io.connect("http://127.0.0.1:1234");
+var socket = io.connect("http://3dstreamingsignalingserver.azurewebsites.net:80");
+// var socket = io.connect("http://127.0.0.1:1234");
 
 if (room !== '') {
   socket.emit('create or join', room);
