@@ -54,18 +54,18 @@ socket.on('joined', function (room) {
 });
 
 socket.on('log', function (array) {
-  console.log.apply(console, array);
+  //console.log.apply(console, array);
 });
 
 
 function sendMessage(message) {
-  console.log('Client sending message: ', message);
+  // console.log('Client sending message: ', message);
   socket.emit('message', message);
 }
 
 // This client receives a message
 socket.on('message', function (message) {
-  console.log('Client received message:', message);
+  // console.log('Client received message:', message);
   if (message.type === 'offer') {
     peerConnection.setRemoteDescription(new RTCSessionDescription(message));
     doAnswer();
@@ -108,7 +108,7 @@ function createPeerConnection() {
     }
     peerConnection.onicecandidate = handleIceCandidate;
     peerConnection.onaddstream = handleRemoteStreamAdded;
-    console.log('Created RTCPeerConnnection');
+    console.log('Created RTCPeerConnnection', peerConnection);
   } catch (e) {
     console.log('Failed to create PeerConnection, exception: ' + e.message);
     alert('Cannot create RTCPeerConnection object.');
@@ -117,9 +117,9 @@ function createPeerConnection() {
 }
 
 function handleIceCandidate(event) {
-  console.log('icecandidate event: ', event);
   if (event.candidate) {
-    sendMessage({
+      console.log('icecandidate event candidate info: ', event.candidate.candidate);
+      sendMessage({
       type: 'candidate',
       label: event.candidate.sdpMLineIndex,
       id: event.candidate.sdpMid,
