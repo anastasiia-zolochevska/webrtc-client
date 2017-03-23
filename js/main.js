@@ -3,17 +3,32 @@
 var isChannelReady = false;
 var isServer = false;
 var localStream;
+var receiveChannel;
 var peerConnection;
 var remoteStream;
+var sendChannel;
 
 var serverButton = document.getElementById('serverButton');
 var startTestButton = document.getElementById('startTestButton');
 var connectButton = document.getElementById('connectButton');
 var getStatsButton = document.getElementById('getStatsButton');
+var sendTextArea = document.querySelector('textarea#sendTextArea');
+var dataChannelReceive = document.querySelector('textarea#dataChannelReceive');
+var sendButton = document.querySelector('button#sendButton');
+var dataTestButton = document.querySelector('button#dataTestButton');
+
+
 
 var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
+sendButton.onclick = function () {
+  sendData(sendTextArea.value);
+}
+
+dataTestButton.onclick = function () {
+  sendData(JSON.stringify({ "sentTs": Date.now() }));
+}
 
 serverButton.onclick = function () {
   isServer = true;
@@ -30,10 +45,6 @@ connectButton.onclick = function () {
 
 getStatsButton.onclick = function () {
   gatherStats();
-}
-
-disconnectButton.onclick = function () {
-  sendMessage('bye');
 }
 
 var room = 'foo';
@@ -100,14 +111,67 @@ var pcConfig = {
   }]
 };
 
+
+function sendData(data) {
+  sendChannel.send(data);
+}
+
+function receiveChannelCallback(event) {
+  console.log('Receive Channel Callback');
+  receiveChannel = event.channel;
+  receiveChannel.onmessage = onReceiveMessageCallback;
+  receiveChannel.onopen = onReceiveChannelStateChange;
+  receiveChannel.onclose = onReceiveChannelStateChange;
+}
+
+function onReceiveMessageCallback(event) {
+  var object = JSON.parse(event.data);
+  console.log('Received Message', object);
+  if (!object.receivedTs) {
+    object = Object.assign({ receivedTs: Date.now() }, object);
+    sendData(JSON.stringify(object));
+  }
+  else {
+    console.log("RTT", Date.now() - object.sentTs);
+  }
+  //  dataChannelReceive.value = event.data;
+}
+
+function onSendChannelStateChange() {
+  var readyState = sendChannel.readyState;
+  console.log('Send channel state is: ' + readyState);
+  if (readyState === 'open') {
+    sendTextArea.disabled = false;
+    sendTextArea.focus();
+  } else {
+    sendTextArea.disabled = true;
+    sendButton.disabled = true;
+  }
+}
+
+function onReceiveChannelStateChange() {
+  var readyState = receiveChannel.readyState;
+  console.log('Receive channel state is: ' + readyState);
+}
+
+
 function createPeerConnection() {
   try {
+
     peerConnection = new RTCPeerConnection(pcConfig);
     if (isServer) {
-      peerConnection.addStream(localStream);
+      sendChannel
+      //peerConnection.addStream(localStream);
     }
+    sendChannel = peerConnection.createDataChannel("sendChannel");
+
     peerConnection.onicecandidate = handleIceCandidate;
     peerConnection.onaddstream = handleRemoteStreamAdded;
+    sendChannel.onopen = onSendChannelStateChange;
+    sendChannel.onclose = onSendChannelStateChange;
+
+    peerConnection.ondatachannel = receiveChannelCallback;
+
     console.log('Created RTCPeerConnnection', peerConnection);
   } catch (e) {
     console.log('Failed to create PeerConnection, exception: ' + e.message);
@@ -118,8 +182,8 @@ function createPeerConnection() {
 
 function handleIceCandidate(event) {
   if (event.candidate) {
-      console.log('icecandidate event candidate info: ', event.candidate.candidate);
-      sendMessage({
+    console.log('icecandidate event candidate info: ', event.candidate.candidate);
+    sendMessage({
       type: 'candidate',
       label: event.candidate.sdpMLineIndex,
       id: event.candidate.sdpMid,
@@ -160,7 +224,7 @@ function setLocalAndSendMessage(sessionDescription) {
 }
 
 function onCreateSessionDescriptionError(error) {
-  trace('Failed to create session description: ' + error.toString());
+  console.log('Failed to create session description: ' + error.toString());
 }
 
 
