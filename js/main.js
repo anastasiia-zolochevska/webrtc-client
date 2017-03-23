@@ -160,8 +160,7 @@ function createPeerConnection() {
 
     peerConnection = new RTCPeerConnection(pcConfig);
     if (isServer) {
-      sendChannel
-      //peerConnection.addStream(localStream);
+      peerConnection.addStream(localStream);
     }
     sendChannel = peerConnection.createDataChannel("sendChannel");
 
