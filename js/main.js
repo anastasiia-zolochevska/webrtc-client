@@ -187,13 +187,17 @@ function createPeerConnection() {
 
 function handleIceCandidate(event) {
   if (event.candidate) {
-    console.log('icecandidate event candidate info: ', event.candidate.candidate);
-    sendMessage({
-      type: 'candidate',
-      label: event.candidate.sdpMLineIndex,
-      id: event.candidate.sdpMid,
-      candidate: event.candidate.candidate
-    });
+    
+    if (candidate.candidate.indexOf("typ relay ") != -1) {
+
+      sendMessage({
+        type: 'candidate',
+        label: event.candidate.sdpMLineIndex,
+        id: event.candidate.sdpMid,
+        candidate: event.candidate.candidate
+      });
+      console.log('icecandidate event candidate info: ', event.candidate.candidate);
+    }
   } else {
     console.log('End of candidates.');
   }
