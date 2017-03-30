@@ -164,7 +164,7 @@ function onReceiveChannelStateChange() {
 function createPeerConnection() {
   try {
 
-    peerConnection = new RTCPeerConnection(null);
+    peerConnection = new RTCPeerConnection(pcConfig);
     if (isServer) {
       peerConnection.addStream(localStream);
     }
