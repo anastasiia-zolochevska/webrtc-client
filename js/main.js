@@ -110,7 +110,7 @@ var pcConfig = {
     'url': 'stun:stun.l.google.com:19302'
   },
   {
-    url: 'turn:13.65.204.65:3478?transport=udp',
+    url: 'turn:13.65.204.45:3478?transport=udp',
     credential: '3Dstreaming0317',
     username: 'anzoloch'
   }]
