@@ -188,7 +188,7 @@ function createPeerConnection() {
 function handleIceCandidate(event) {
   if (event.candidate) {
     
-    if (candidate.candidate.indexOf("typ relay ") != -1) {
+    if (event.candidate.candidate.indexOf("typ relay ") != -1) {
 
       sendMessage({
         type: 'candidate',
