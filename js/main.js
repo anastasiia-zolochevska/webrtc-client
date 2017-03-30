@@ -107,9 +107,9 @@ window.onbeforeunload = function () {
 
 var pcConfig = {
   'iceServers': [
-    // {
-    //   'url': 'stun:stun.l.google.com:19302'
-    // },
+    {
+      'url': 'stun:stun.l.google.com:19302'
+    },
     {
       url: 'turn:13.65.204.45:3478',
       credential: '3Dstreaming0317',
