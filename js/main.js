@@ -111,9 +111,9 @@ var pcConfig = {
       'url': 'stun:stun.l.google.com:19302'
     },
     {
-      url: 'turn:13.65.204.45:3478',
+      url: 'turn:40.69.190.80:3478',
       credential: '3Dstreaming0317',
-      username: 'anzoloch'
+      username: 'user'
     }]
 };
 
@@ -186,10 +186,8 @@ function createPeerConnection() {
 }
 
 function handleIceCandidate(event) {
-  if (event.candidate) {
-    
+  if (event.candidate) { 
     if (event.candidate.candidate.indexOf("typ relay ") != -1) {
-
       sendMessage({
         type: 'candidate',
         label: event.candidate.sdpMLineIndex,
