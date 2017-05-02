@@ -111,8 +111,8 @@ var pcConfig = {
 //       'url': 'stun:stun.l.google.com:19302'
 //     },
     {
-      url: 'turn:52.176.105.63:3478',
-      credential: '3Dstreaming2017',
+      url: 'turn:65.52.29.174:3478',
+      credential: '3Dstreaming0317',
       username: 'user'
     }]
 };
